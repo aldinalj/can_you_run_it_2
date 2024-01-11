@@ -6,92 +6,79 @@ import java.io.InputStreamReader;
 
 public class Disk {
 
-	private int total;
-	private int used;
-	private int free;
-	
-	public Disk(int total, int used, int free) {
+	private long total;
+	private long used;
+	private long free;
+
+	public Disk(long total, long used, long free) {
 		this.total = total;
 		this.used = used;
 		this.free = free;
 	}
-	
-	
-	
-	public int getTotal() {
+
+	public long getTotal() {
 		return total;
 	}
 
-
-
-	public void setTotal(int total) {
+	public void setTotal(long total) {
 		this.total = total;
 	}
 
-
-
-	public int getUsed() {
+	public long getUsed() {
 		return used;
 	}
 
-
-
-	public void setUsed(int used) {
+	public void setUsed(long used) {
 		this.used = used;
 	}
 
-
-
-	public int getFree() {
+	public long getFree() {
 		return free;
 	}
 
-
-
-	public void setFree(int free) {
+	public void setFree(long free) {
 		this.free = free;
 	}
 
+	public static Disk getDiskInfo() throws IOException, InterruptedException {
+		Process process = Runtime.getRuntime().exec("wmic logicaldisk get deviceid, freespace, size, volumename");
+		process.waitFor();
 
+		BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+		String line;
 
-		public static Disk getDiskInfo() throws IOException, InterruptedException {
+		// Skip the header lines
+		reader.readLine();
+		reader.readLine();
 
-			 
+		long total = 0, used = 0, free = 0;
 
-			 /*
-			  * Lägg scriptet i exec argumentet för att se disk info.
-			  *  
-			  * 
-			  * Ni kan prova dessa i era terminaler		  * 
-			  * Sök gärna upp om de kanske finns något annat script ni kan nytja.
-			  * cmd(windows) terminal(mac) 
-			  * 
-			  * Windows
-			  * wmic logicaldisk get deviceid, freespace, size, volumename
-			  * 
-			  * 
-			  * Mac/linux
-			  * df -h
-			  * 
-			  * 
-			  * */
+		while ((line = reader.readLine()) != null) {
+			try {
+				// Assuming the output is in the format "DeviceID FreeSpace Size VolumeName"
+				String[] tokens = line.trim().split("\\s+");
+				if (tokens.length >= 3) {
+					String deviceID = tokens[0];
+					long freeSpace = Long.parseLong(tokens[1]);
+					long size = Long.parseLong(tokens[2]);
 
-		        Process process = Runtime.getRuntime().exec("df -h");
-		        process.waitFor(); 
+					total += size;
+					used += (size - freeSpace);
+					free += freeSpace;
+				}
+			} catch (NumberFormatException e) {
+				e.printStackTrace();
+			}
+		}
 
-		        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-		        String line;
+		reader.close();
 
-		        int free = 0, used = 0, total = 0;
+		// Convert sizes to gigabytes
+		long gigabyteFactor = 1024 * 1024 * 1024;
+		total /= gigabyteFactor;
+		used /= gigabyteFactor;
+		free /= gigabyteFactor;
 
-		        // Skip the header line
-		        reader.readLine();
-
-		        while ((line = reader.readLine()) != null) {
-		        	System.out.println(line);
-		        }
-
-		        reader.close();
-		        return new Disk(total, used, free);
+		return new Disk(total, used, free);
 	}
 }

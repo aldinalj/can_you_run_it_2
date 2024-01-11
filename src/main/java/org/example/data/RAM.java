@@ -5,57 +5,51 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class RAM {
-	
-	private long memory;
-	
-	
+
+	private long memory; // Memory in bytes
+
 	public long getMemory() {
 		return memory;
 	}
+
 	public void setMemory(long memory) {
 		this.memory = memory;
 	}
+
 	public RAM(long memory) {
 		this.memory = memory;
 	}
+
 	public static RAM getRAMinfo() throws IOException, InterruptedException {
+		Process process = Runtime.getRuntime().exec("wmic memorychip get capacity");
+		process.waitFor();
 
-			 /*
-			  * Lägg scriptet i exec argumentet för att se ram/mem info.
-			  * 
-			  * Ni kan prova dessa i era terminaler
-			  * Sök gärna upp om de kanske finns något annat script ni kan nytja.
-			  * cmd(windows) terminal(mac) 
-			  * 
-			  * Windows
-			  * wmic memorychip get capacity
-			  * 
-			  * Mac
-			  * sysctl -n hw.memsize | awk '{print $0/1073741824" GB"}'
-			  * 
-			  * Linux
-			  * free -h
-			  * 
-			  * */
+		BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+		String line;
 
-		        Process process = Runtime.getRuntime().exec("sysctl -n hw.memsize | awk '{print $0/1073741824\" GB\"}'");
-		        process.waitFor(); 
+		// Skip the header lines
+			reader.readLine();
 
-		        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-		        String line;
 
-		        long memory = 0; 
+		long memoryInBytes = 0;
 
-		        // Skip the header line
-		        reader.readLine();
+		while ((line = reader.readLine()) != null) {
+			try {
+				// Assuming the output is in the format "Capacity"
+				String[] tokens = line.trim().split("\\s+");
+				if (tokens.length >= 1) {
+					memoryInBytes += Long.parseLong(tokens[0]);
+				}
+			} catch (NumberFormatException e) {
+				e.printStackTrace();
+			}
+		}
 
-		        while ((line = reader.readLine()) != null) {
-		        	System.out.println(line);
-		        }
+		reader.close();
 
-		        reader.close();
-		        return new RAM(memory);
+		// Convert bytes to gigabytes
+		long memoryInGB = memoryInBytes / (1024 * 1024 * 1024);
+
+		return new RAM(memoryInGB);
 	}
-
-
 }
