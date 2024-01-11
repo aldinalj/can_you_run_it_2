@@ -6,7 +6,7 @@ Därmed påbörjade han ett projekt där han tar in systeminformation och jämf�
 Simons dator krashade precis innan han skrev reggexen för att plocka den information han får från konsolen.
 Hjälp Simon att skriva klart koden.
 
-Gå in på Simons github och hämtra projektet. https://github.com/FredrikEkmark/can_you_run_it_2
+Gå in på Fredriks github och hämtra projektet. https://github.com/FredrikEkmark/can_you_run_it_2
 
 Det finns förberett klasser som innehåller en metod och värden.
 
